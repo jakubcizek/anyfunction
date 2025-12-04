@@ -2,8 +2,8 @@ from anyfunction import anyFunction as af, Run
 
 '''
 Nastaveni ve skriptu anyfunction.py
-API_KEY: API klic pro platformu OpenAI (pripadne neeni problem upravit pro jineho providera)
-MODEL: Vychozi model, pokud neni nastaveni explicitne ve volani funcke anyFunction
+API_KEY: API klic pro platformu OpenAI (pripadne neni problem upravit pro jineho providera)
+MODEL: Vychozi model, pokud neni nastaveni explicitne ve volani funkce anyFunction
 
 Jednoduche volani:
 ODPOVED = anyFunction(VSTUP, PROMPT, TYP_ODPOVEDI)
@@ -11,7 +11,7 @@ ODPOVED = anyFunction(VSTUP, PROMPT, TYP_ODPOVEDI)
 Volani s vynucenym modelem:
 ODPOVED = anyFunction(VSTUP, PROMPT, TYP_ODPOVEDI, model="gpt-5-nano")
 
-Volani s interpretaci kodu (specialni rezim, kdy i model vi, ze ma generovat kod v Pythonu, ktery spustime lokalne):
+Volani s lokalnim spustenim kodu (specialni rezim, kdy i model vi, ze ma generovat kod v Pythonu, ktery spustime lokalne):
 anyFunction(VSTUP, PROMPT, Run)
 
 '''
