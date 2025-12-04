@@ -27,7 +27,7 @@ zviratka = ["pes", "kočka", "slon", "orel", "velryba"]
 domaci = af(zviratka, "vyber pouze domaci zvirata", list)
 print(domaci)
 
-veta = "Dobrý den, jmenuji se Luboš Čmelák a někde jsem ztartil tkaničky od bot."
+veta = "Dobrý den, jmenuji se Luboš Čmelák a někde jsem ztratil tkaničky od bot."
 anglicky = af(veta, "preloz text do anglcitiny", str)
 print(anglicky)
 
