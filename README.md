@@ -1,0 +1,3 @@
+Podivej se na test.py a ukazka.png. 
+
+Cely to bezi na OpenAI, takze potrebujes vlastni API key...
