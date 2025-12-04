@@ -3,7 +3,7 @@ from anyfunction import anyFunction as af, Run
 '''
 Nastaveni ve skriptu anyfunction.py
 API_KEY: API klic pro platformu OpenAI (pripadne neni problem upravit pro jineho providera)
-MODEL: Vychozi model, pokud neni nastaveni explicitne ve volani funkce anyFunction
+MODEL: Vychozi model, pokud neni nastaveny explicitne ve volani funkce anyFunction
 
 Jednoduche volani:
 ODPOVED = anyFunction(VSTUP, PROMPT, TYP_ODPOVEDI)
