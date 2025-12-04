@@ -28,7 +28,7 @@ domaci = af(zviratka, "vyber pouze domaci zvirata", list)
 print(domaci)
 
 veta = "Dobrý den, jmenuji se Luboš Čmelák a někde jsem ztratil tkaničky od bot."
-anglicky = af(veta, "preloz text do anglcitiny", str)
+anglicky = af(veta, "preloz text do anglictiny", str)
 print(anglicky)
 
 data = {
