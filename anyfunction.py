@@ -1,41 +1,83 @@
 from __future__ import annotations
-
 from typing import Any, Optional, Type
-from openai import OpenAI
 import json
 import ast
+from openai import OpenAI # github.com/openai/openai-python
 
-# API key pro OpenAI, svuj fakt nedam ;)
-API_KEY = "bla bla bla"
+# Konfigurace poskytovatelů API
+# Je třeba nastavit vlastní klíč API / API key
 
-'''
-gpt-5.1      - nejdrazsi, ale schopny
-gpt-5-mini   - o rad levnejsi, bude stacit
-gpt-5-nano   - o dva rady levnejsi, muze stacit az na komplexni ulohy
+API_CONFIG_OPENAI = {
+    "url": "https://api.openai.com/v1",
+    "key": "Váš API klíč pro používání služeb OpenAI",
+    "model": "gpt-5.1",
+}
 
-https://platform.openai.com/docs/models
-https://platform.openai.com/docs/pricing
+API_CONFIG_GEMINI = {
+    "url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "key": "Váš API klíč pro používání služeb Google Gemini",
+    "model": "models/gemini-2.5-flash",
+}
 
-'''
-MODEL = "gpt-5.1" # Pozor, ve vychozim stavu nejdrazsi/nejlepsi model
+API_CONFIG_GROK = {
+    "url": "https://api.x.ai/v1",
+    "key": "Váš API klíč pro používání služeb xAI Grok",
+    "model": "grok-4-latest",
+}
 
-client = OpenAI(api_key=API_KEY)
+# Zdarma, ale slabší
+API_CONFIG_MISTRAL = {
+    "url": "https://api.mistral.ai/v1",
+    "key": "Váš API klíč pro používání služeb Mistral",
+    "model": "mistral-large-latest",
+}
 
-class Run:
-    pass
+# Výchozí provider, pokud jej nevybereme až za běhu
+API_CONFIG = API_CONFIG_OPENAI
 
-def anyFunction(*args: Any, model: str = MODEL) -> Any:
+# Pomocná funkce pro nastavení aktuálního poskytovatele API
+def setProvider(provider: dict):
+    global API_CONFIG
+    API_CONFIG = provider
+
+# Pomocná funkce pro vytvoření instalace knihovny OpenAI s aktuálním poskytovatelem API
+def getProvider() -> OpenAI:
+    return OpenAI(api_key=API_CONFIG["key"], base_url=API_CONFIG["url"])
+
+# Pomocná funkce pro získání dostupných modelů aktuálního poskytovatele API
+# Vracíme pole textových názvů modelů, které používáme i v anyFunction
+def getAvailableModels() -> list[str]:
+    client = getProvider()
+    models = []
+    try:
+        resp = client.models.list()
+    except Exception:
+        return models
+
+    for m in getattr(resp, "data", []):
+        mid = getattr(m, "id", None)
+        if isinstance(mid, str):
+            models.append(mid)
+    return models
+
+# A toto je už naše univerzální funkce anyFunction
+# Základní signatura je odpověď = anyFunction(vstupní data (buď jedna položka, nebo více promenných za sebou), prompt, datový typ odpovědi)
+# Následují volitlené argumenty:
+# - model (str) pro explicitní určení modelu aktuálního poskytovatele API
+# - run (bool) pro určení, jestli hledáme konečnou odpvoěď, nebo AI generuje kód v Pythonu, který se spustí až na našem počítači (režim primitivního agenta)
+def anyFunction(*args: Any, model: Optional[str] = None, run: bool = False) -> Any:
+
     if len(args) < 2:
-        raise ValueError("Je potřeba alespoň data a prompt.")
-
-    run_mode = False
+        raise ValueError("Jsou potřeba alespoň vstupní data (případně None), prompt a typ odpovědi")
     return_type: Optional[Type] = None
 
-    if args[-1] is Run:
-        run_mode = True
-        prompt = args[-2]
-        data_args = args[:-2]
-    elif isinstance(args[-1], type) and args[-1] is not Run:
+    # Rozlišíme vstupní data a prompt z listu argumentů
+    # Opět připomenu: Data mohou bát první argument, anebo řada argumentů:
+    # Obě tato volání jsou správná:
+    # - anyFunction(cisla, "Zjisti nejvetsi cislo")
+    # - anyFunction(cislo1, cislo2, cislo3, "Zjisti nejvetsi cislo")
+
+    if isinstance(args[-1], type):
         return_type = args[-1]
         prompt = args[-2]
         data_args = args[:-2]
@@ -44,7 +86,7 @@ def anyFunction(*args: Any, model: str = MODEL) -> Any:
         data_args = args[:-1]
 
     if not isinstance(prompt, str):
-        raise TypeError("Poslední (ne-typový) argument musí být textový prompt (str).")
+        raise TypeError("Chybí prompt")
     
     if len(data_args) == 0:
         data = None
@@ -60,7 +102,11 @@ def anyFunction(*args: Any, model: str = MODEL) -> Any:
         data_repr = repr(data)
         data_format = "Python repr"
 
-    if run_mode:
+    # A tady už začíná magie. Pokud spouštíme funkci v režimu lokálního interpretra/agenta,
+    # připravíme systémový prompt, ve kterém modelu říkáme, že má podle uživatelského promptu 
+    # vytvořit kód v Pythonu s patřičnými náležitostmi
+
+    if run:
         system_prompt = (
             "You are a Python code generator.\n"
             "Given the input data and the user's natural language instruction, "
@@ -69,8 +115,13 @@ def anyFunction(*args: Any, model: str = MODEL) -> Any:
             "You may import standard libraries, define functions, start servers, etc.\n"
             "If you rely on `if __name__ == '__main__':`, it WILL be true.\n"
             "Store any final value that should be returned in a variable named `result` (optional).\n"
-            "Output ONLY raw Python code, without backticks, comments or explanations."
+            "Output ONLY raw Python code, without backticks, markdown fences, comments or explanations.\n"
+            "Do not use ``` or ```python anywhere in the response."
         )
+
+    # Pokud funkci spouštíme v režimu hledání konečné odpovědi, systémový prompt se liší a my model pobízíme,
+    # aby vracel data ve správném formátu bez další omáčky
+
     else:
         if return_type is None:
             type_instruction = (
@@ -93,30 +144,53 @@ def anyFunction(*args: Any, model: str = MODEL) -> Any:
             + type_instruction
         )
 
+    # Příprava uživatelského promptu, ve kterém spojíme samotný prompt se vstupními daty
     user_prompt = f"""User instruction (natural language):
-{prompt}
+    {prompt}
 
-Input data (format: {data_format}):
-{data_repr}
-"""
-    response = client.responses.create(
-        model=model,
-        input=[
+    Input data (format: {data_format}):
+    {data_repr}
+    """
+
+    # Zkonsturujeme dotaz na model pomocí OpenAI API
+    client = getProvider()
+    used_model = model or API_CONFIG["model"]
+
+    response = client.chat.completions.create(
+        model=used_model,
+        messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
     )
 
-    raw_output = response.output_text
+    # Získáme surovou odpověď
+    raw_output = response.choices[0].message.content
 
-    if run_mode:
+    # Pokud jsme v režimu agenta, pokusíme se ji interpretovat jako kód Pythonu
+    # Pozor, nebezpečné – kód bude mít stejná práva jako my a může cokoliv smazat
+    if run:
         exec_env: dict[str, Any] = {
             "__name__": "__main__",
             "data": data,
         }
+        # Některé modely ignorují systémový prompt, ve kterém žádáme, aby vrcely kód bez jakékoliv obálky
+        # Proto se pokusíme odstranit typickou hlavičku ```python na začátku odpovědi
+        if raw_output.startswith("```"):
+            lines = raw_output.splitlines()
+            if lines and lines[0].lstrip().startswith("```"):
+                lines = lines[1:]
+            while lines and lines[0].strip() == "":
+                lines = lines[1:]
+            if lines and lines[-1].lstrip().startswith("```"):
+                lines = lines[:-1]
+            raw_output = "\n".join(lines)
+        # Interpretace/spuštění kódu
         exec(raw_output, exec_env)
+        # Pokud kód vrací odpověď, vrátíme ji také
         return exec_env.get("result")
 
+    # Převedení odpovědi modelu do správného datového typu, který požadujeme
     try:
         value = ast.literal_eval(raw_output)
     except Exception:
