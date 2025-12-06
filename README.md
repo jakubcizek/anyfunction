@@ -1,3 +1,4 @@
-Podivej se na test.py a ukazka.png. 
+## Funkce v Pythonu, která je úplně na všechno
 
-Cely to bezi na OpenAI, takze potrebujes vlastni API key...
+Jednoduchý wrapper pro OpenAI, Gemini, Grok, Mistral a další AI API kompatibilní s formátem OpenAI. Postaveno nad OpenAI Python API library (https://github.com/openai/openai-python)
+Pro lepší pochopení se podívejte na testovací ukázky test*.py
