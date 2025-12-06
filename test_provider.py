@@ -11,5 +11,5 @@ setProvider(provider)
 models = getAvailableModels()
 
 for model in models:
-
     print(model)
+
