@@ -2,7 +2,7 @@ from anyfunction import setProvider, getAvailableModels
 
 provider = {
     "url": "https://api.mistral.ai/v1",
-    "key": "Og84c9hxjTuh0OgfQtnv6uw1e6xIeLqU",
+    "key": "APi klic pro pristup ke sluzbam Mistral",
     "model": "mistral-large-latest",
 }
 
@@ -11,4 +11,5 @@ setProvider(provider)
 models = getAvailableModels()
 
 for model in models:
+
     print(model)
