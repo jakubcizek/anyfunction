@@ -40,7 +40,7 @@ def setProvider(provider: dict):
     global API_CONFIG
     API_CONFIG = provider
 
-# Pomocná funkce pro vytvoření instalace knihovny OpenAI s aktuálním poskytovatelem API
+# Pomocná funkce pro vytvoření instance OpenAI s aktuálním poskytovatelem API
 def getProvider() -> OpenAI:
     return OpenAI(api_key=API_CONFIG["key"], base_url=API_CONFIG["url"])
 
